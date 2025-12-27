@@ -1,0 +1,118 @@
+export type Lang = 'en' | 'zh';
+
+export const languages: Lang[] = ['en', 'zh'];
+
+export const defaultLang: Lang = 'en';
+
+export const ui = {
+  en: {
+    'nav.home': 'Home',
+    'nav.research': 'Research',
+    'nav.publications': 'Publications',
+    'nav.news': 'News',
+    'nav.cv': 'CV',
+    'nav.teaching': 'Teaching',
+    'nav.team': 'Team',
+    'nav.contact': 'Contact',
+    'nav.photos': 'Photos',
+    'nav.search': 'Search',
+    'footer.copyright': 'All rights reserved.',
+    'home.welcome': 'Welcome',
+    'home.research.intro': 'Our research focuses on',
+    'home.recent.publications': 'Recent Publications',
+    'home.recent.news': 'Recent News',
+    'home.research.areas': 'Research Areas',
+    'home.software': 'Software & Tools',
+    'publications.title': 'Publications',
+    'publications.filter.all': 'All',
+    'publications.filter.year': 'Year',
+    'publications.filter.type': 'Type',
+    'publications.link': 'Link',
+    'publications.pdf': 'PDF',
+    'news.title': 'News',
+    'news.filter.all': 'All',
+    'news.filter.year': 'Year',
+    'research.title': 'Research',
+    'teaching.title': 'Teaching',
+    'team.title': 'Team',
+    'contact.title': 'Contact',
+    'contact.email': 'Email',
+    'contact.address': 'Address',
+    'contact.send': 'Send',
+    'contact.copy': 'Copy Email',
+    'contact.copied': 'Copied!',
+    'cv.title': 'Curriculum Vitae',
+    'cv.education': 'Education',
+    'cv.experience': 'Experience',
+    'cv.awards': 'Awards & Honors',
+    'photos.title': 'Photos',
+    'search.title': 'Search',
+    'search.placeholder': 'Search publications, news, research...',
+    'search.no.results': 'No results found',
+    'search.results': 'results found',
+    'theme.light': 'Light',
+    'theme.dark': 'Dark',
+    'theme.auto': 'Auto',
+  },
+  zh: {
+    'nav.home': '首页',
+    'nav.research': '研究方向',
+    'nav.publications': '论文发表',
+    'nav.news': '动态',
+    'nav.cv': '简历',
+    'nav.teaching': '教学',
+    'nav.team': '团队',
+    'nav.contact': '联系方式',
+    'nav.photos': '相册',
+    'nav.search': '搜索',
+    'footer.copyright': '版权所有。',
+    'home.welcome': '欢迎',
+    'home.research.intro': '我们的研究专注于',
+    'home.recent.publications': '近期论文',
+    'home.recent.news': '近期动态',
+    'home.research.areas': '研究方向',
+    'home.software': '软件工具',
+    'publications.title': '论文发表',
+    'publications.filter.all': '全部',
+    'publications.filter.year': '年份',
+    'publications.filter.type': '类型',
+    'publications.link': '链接',
+    'publications.pdf': 'PDF',
+    'news.title': '动态',
+    'news.filter.all': '全部',
+    'news.filter.year': '年份',
+    'research.title': '研究方向',
+    'teaching.title': '教学',
+    'team.title': '团队',
+    'contact.title': '联系方式',
+    'contact.email': '邮箱',
+    'contact.address': '地址',
+    'contact.send': '发送',
+    'contact.copy': '复制邮箱',
+    'contact.copied': '已复制！',
+    'cv.title': '个人简历',
+    'cv.education': '教育背景',
+    'cv.experience': '工作经历',
+    'cv.awards': '获奖荣誉',
+    'photos.title': '相册',
+    'search.title': '搜索',
+    'search.placeholder': '搜索论文、动态、研究方向...',
+    'search.no.results': '未找到结果',
+    'search.results': '个结果',
+    'theme.light': '浅色',
+    'theme.dark': '深色',
+    'theme.auto': '自动',
+  },
+} as const;
+
+export function getLangFromPath(pathname: string): Lang {
+  const lang = pathname.split('/')[1];
+  return (languages.includes(lang as Lang) ? lang : defaultLang) as Lang;
+}
+
+export function useTranslations(lang: Lang) {
+  return function t(key: keyof typeof ui.en) {
+    return ui[lang][key] || ui[defaultLang][key];
+  };
+}
+

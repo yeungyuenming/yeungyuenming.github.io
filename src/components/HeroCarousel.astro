@@ -1,0 +1,479 @@
+---
+import { useTranslations, type Lang } from '@i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+// 定义多个幻灯片内容，每个都有不同的主题
+const slides = [
+  {
+    title: lang === 'en' ? 'Welcome to Our Research Lab' : '欢迎来到我们的研究实验室',
+    subtitle: lang === 'en' 
+      ? 'Advancing knowledge through innovation and collaboration'
+      : '通过创新与合作推动中医药传承发展',
+    emoji: '👋',
+    theme: 'welcome'
+  },
+  {
+    title: lang === 'en' ? 'Cutting-Edge Research' : '勤求古训，博彩众长',
+    subtitle: lang === 'en'
+      ? 'Exploring new frontiers in science and technology'
+      : '追寻中华文化，感悟古人智慧，传承千年中医，服务万众生灵',
+    emoji: '📜',
+    theme: 'research'
+  },
+  {
+    title: lang === 'en' ? 'Collaborative Innovation' : '面向前沿，追赶超越',
+    subtitle: lang === 'en'
+      ? 'Working together to solve complex challenges'
+      : '拥抱未来，拥抱科技，信息共享，计算生命',
+    emoji: '🔬',
+    theme: 'collaboration'
+  },
+  {
+    title: lang === 'en' ? 'Excellence in Science' : '中西融合，协作创新',
+    subtitle: lang === 'en'
+      ? 'Pursuing excellence in research and discovery'
+      : '传统与现代融合，中西医协作，携手解决复杂挑战',
+    emoji: '⭐',
+    theme: 'excellence'
+  },
+  {
+    title: lang === 'en' ? 'Global Impact' : '全球影响',
+    subtitle: lang === 'en'
+      ? 'Making a difference worldwide through our research'
+      : '通过研究在全球范围内产生影响',
+    emoji: '🌍',
+    theme: 'impact'
+  },
+  {
+    title: lang === 'en' ? 'Future Leaders' : '未来领袖',
+    subtitle: lang === 'en'
+      ? 'Training the next generation of researchers'
+      : '培养下一代研究人员',
+    emoji: '🚀',
+    theme: 'leadership'
+  },
+  {
+    title: lang === 'en' ? 'Innovation Hub' : '创新中心',
+    subtitle: lang === 'en'
+      ? 'Where ideas transform into breakthrough discoveries'
+      : '将想法转化为突破性发现的地方',
+    emoji: '💡',
+    theme: 'innovation'
+  },
+  {
+    title: lang === 'en' ? 'Research Excellence' : '研究卓越',
+    subtitle: lang === 'en'
+      ? 'Pushing boundaries and creating new knowledge'
+      : '突破边界，创造新知识',
+    emoji: '🎯',
+    theme: 'excellence'
+  },
+];
+---
+
+<div class="hero-carousel">
+  <div class="carousel-container">
+    <div class="carousel-track" id="carousel-track">
+      {slides.map((slide, index) => (
+        <div class={`carousel-slide slide-theme-${slide.theme}`} data-slide={index} data-theme={slide.theme}>
+          <div class="slide-content">
+            <h1>{slide.title} {slide.emoji}</h1>
+            <p class="hero-subtitle">{slide.subtitle}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+    
+    <button class="carousel-btn carousel-btn-prev" id="carousel-prev" aria-label="Previous slide">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    
+    <button class="carousel-btn carousel-btn-next" id="carousel-next" aria-label="Next slide">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+    
+    <div class="carousel-indicators" id="carousel-indicators">
+      {slides.map((_, index) => (
+        <button
+          class="carousel-indicator"
+          data-slide={index}
+          aria-label={`Go to slide ${index + 1}`}
+        ></button>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const track = document.getElementById('carousel-track');
+    const prevBtn = document.getElementById('carousel-prev');
+    const nextBtn = document.getElementById('carousel-next');
+    const indicators = document.querySelectorAll('.carousel-indicator');
+    const slides = document.querySelectorAll('.carousel-slide');
+    
+    if (!track || !prevBtn || !nextBtn || slides.length === 0) return;
+    
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function updateCarousel() {
+      // 更新幻灯片显示状态（确保一次只显示一个）
+      slides.forEach((slide, index) => {
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+      
+      // 更新指示器
+      indicators.forEach((indicator, index) => {
+        if (index === currentSlide) {
+          indicator.classList.add('active');
+        } else {
+          indicator.classList.remove('active');
+        }
+      });
+    }
+    
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      updateCarousel();
+    }
+    
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      updateCarousel();
+    }
+    
+    function goToSlide(index: number) {
+      currentSlide = index;
+      updateCarousel();
+    }
+    
+    // 事件监听
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+    });
+    
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+    });
+    
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        goToSlide(index);
+      });
+    });
+    
+    // 触摸滑动支持
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+    
+    track.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].clientX;
+      handleSwipe();
+    });
+    
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      }
+    }
+    
+    // 初始化 - 设置第一个幻灯片为active
+    if (slides.length > 0) {
+      slides[0].classList.add('active');
+    }
+    updateCarousel();
+  })();
+</script>
+
+<style>
+  .hero-carousel {
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+    color: white;
+    padding: 0;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    height: 38rem;
+  }
+  
+  .carousel-container {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .carousel-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    z-index: 1;
+  }
+  
+  .carousel-slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 2;
+  }
+  
+  .slide-content {
+    text-align: center;
+    max-width: 800px;
+  }
+  
+  .slide-content h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: white;
+    line-height: 1.2;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.5rem;
+    opacity: 0.95;
+    line-height: 1.6;
+  }
+  
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+  
+  .carousel-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  .carousel-btn:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  .carousel-btn-prev {
+    left: -4rem;
+  }
+  
+  .carousel-btn-next {
+    right: -4rem;
+  }
+  
+  .carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2rem;
+    backdrop-filter: blur(10px);
+  }
+  
+  .carousel-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+  }
+  
+  .carousel-indicator:hover {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: scale(1.2);
+  }
+  
+  .carousel-indicator.active {
+    background: white;
+    border-color: white;
+    width: 32px;
+    border-radius: 6px;
+  }
+  
+  /* 不同主题的样式变化 - 每个幻灯片都有独特的背景渐变 */
+  .carousel-slide.slide-theme-welcome {
+    background-image: url('/pictures/welcome.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .carousel-slide.slide-theme-research {
+    background-image: url('/pictures/tcm-page.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .carousel-slide.slide-theme-collaboration {
+    background-image: url('/pictures/computational-biology.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .carousel-slide.slide-theme-collaboration .hero-subtitle {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6);
+    font-weight: 500;
+  }
+  
+  .carousel-slide.slide-theme-excellence {
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+  }
+  
+  .carousel-slide[data-slide="3"] {
+    background-image: url('/pictures/tcm-decode.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .carousel-slide.slide-theme-impact {
+    background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+  }
+  
+  .carousel-slide.slide-theme-leadership {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  }
+  
+  .carousel-slide.slide-theme-innovation {
+    background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+  }
+  
+  /* 确保幻灯片覆盖整个容器 */
+  .carousel-slide {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    z-index: 1;
+  }
+  
+  .carousel-slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 2;
+  }
+  
+  @media (max-width: 768px) {
+    .hero-carousel {
+      padding: 20rem 0 3rem 0;
+      min-height: 20rem;
+    }
+    
+    .slide-content h1 {
+      font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.125rem;
+    }
+    
+    .carousel-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    
+    .carousel-btn-prev {
+      left: -2rem;
+    }
+    
+    .carousel-btn-next {
+      right: -2rem;
+    }
+    
+    .carousel-indicators {
+      bottom: 0.5rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .carousel-btn-prev {
+      left: -1.5rem;
+    }
+    
+    .carousel-btn-next {
+      right: -1.5rem;
+    }
+  }
+</style>
+

@@ -1,0 +1,151 @@
+---
+import { useTranslations } from '@i18n/ui';
+
+interface Props {
+  lang: 'en' | 'zh';
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<button
+  id="theme-toggle"
+  class="theme-toggle"
+  aria-label="Toggle theme"
+  title=""
+>
+  <svg class="theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <svg class="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+  <svg class="theme-icon-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+    <line x1="8" y1="21" x2="16" y2="21"></line>
+    <line x1="12" y1="17" x2="12" y2="21"></line>
+  </svg>
+</button>
+
+<script>
+  (function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+    
+    const html = document.documentElement;
+    const themes = ['light', 'dark', 'auto'];
+    const lang = `{lang}`;
+    let currentThemeIndex = 0;
+    
+    const tooltips = {
+      light: lang === 'en' ? 'Light' : '浅色',
+      dark: lang === 'en' ? 'Dark' : '深色',
+      auto: lang === 'en' ? 'Auto' : '自动'
+    };
+    
+    // Initialize theme from localStorage or system preference
+    function initTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved && themes.includes(saved)) {
+        currentThemeIndex = themes.indexOf(saved);
+      } else {
+        currentThemeIndex = 2; // default to auto
+      }
+      applyTheme();
+    }
+    
+    function applyTheme() {
+      const theme = themes[currentThemeIndex];
+      localStorage.setItem('theme', theme);
+      
+      if (theme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      } else {
+        html.setAttribute('data-theme', theme);
+      }
+      
+      updateIcon();
+    }
+    
+    function updateIcon() {
+      const icons = {
+        light: themeToggle.querySelector('.theme-icon-light') as HTMLElement,
+        dark: themeToggle.querySelector('.theme-icon-dark') as HTMLElement,
+        auto: themeToggle.querySelector('.theme-icon-auto') as HTMLElement
+      };
+      
+      // Hide all icons
+      Object.values(icons).forEach(icon => {
+        if (icon) icon.style.display = 'none';
+      });
+      
+      // Show current icon
+      const currentIcon = icons[themes[currentThemeIndex]];
+      if (currentIcon) {
+        currentIcon.style.display = 'block';
+      }
+      
+      // Update tooltip
+      themeToggle.title = tooltips[themes[currentThemeIndex]] || '';
+    }
+    
+    themeToggle.addEventListener('click', () => {
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      applyTheme();
+    });
+    
+    // Listen for system theme changes when in auto mode
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (themes[currentThemeIndex] === 'auto') {
+        html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }
+    });
+    
+    // Initialize on load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTheme);
+    } else {
+      initTheme();
+    }
+  })();
+</script>
+
+<style>
+  .theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    transition: color 0.2s ease;
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .theme-toggle:hover {
+    color: var(--color-accent);
+  }
+  
+  .theme-icon-light,
+  .theme-icon-dark,
+  .theme-icon-auto {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: none;
+    stroke-width: 2;
+  }
+</style>
+

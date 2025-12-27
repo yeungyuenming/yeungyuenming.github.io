@@ -1,0 +1,178 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+import { getCollection } from 'astro:content';
+import HeroCarousel from '@components/HeroCarousel.astro';
+import { researchAreas } from '@/data/researchAreas';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+// Get recent publications and news
+let recentPublications: any[] = [];
+let recentNews: any[] = [];
+
+try {
+  const allPublications = await getCollection('publications', ({ data }) => {
+    return data.lang === lang;
+  });
+  recentPublications = allPublications
+    .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+    .slice(0, 3);
+} catch (e) {
+  // Collection might not exist yet
+}
+
+try {
+  const allNews = await getCollection('news', ({ data }) => {
+    return data.lang === lang;
+  });
+  recentNews = allNews
+    .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+    .slice(0, 3);
+} catch (e) {
+  // Collection might not exist yet
+}
+
+const title = lang === 'en' ? 'Home - Research Lab' : '首页 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Welcome to our research lab website'
+  : '欢迎访问我们的研究实验室网站';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/`}>
+  <HeroCarousel lang={lang} />
+
+  <div class="container">
+    {recentPublications.length > 0 && (
+      <section class="home-section">
+        <h2 class="section-title">{t('home.recent.publications')}</h2>
+        <div class="grid">
+          {recentPublications.map((pub) => (
+            <article class="card">
+              <h3>{pub.data.title}</h3>
+              <span class="card-date">{new Date(pub.data.date).getFullYear()}</span>
+              <p>{pub.data.authors}</p>
+              {pub.data.journal && <p class="card-journal">{pub.data.journal}</p>}
+              <div class="card-actions">
+                {pub.data.link && (
+                  <a href={pub.data.link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                    {t('publications.link')}
+                  </a>
+                )}
+                {pub.data.pdf && (
+                  <a href={pub.data.pdf} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                    {t('publications.pdf')}
+                  </a>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+          <a href={`/${lang}/publications/`} class="btn">{lang === 'en' ? 'View All Publications' : '查看所有论文'}</a>
+        </div>
+      </section>
+    )}
+
+    {recentNews.length > 0 && (
+      <section class="home-section">
+        <h2 class="section-title">{t('home.recent.news')}</h2>
+        <div class="grid">
+          {recentNews.map((news) => (
+            <article class="card">
+              <h3>{news.data.title}</h3>
+              <span class="card-date">{new Date(news.data.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'zh-CN')}</span>
+              <p>{news.data.content}</p>
+              {news.data.link && (
+                <a href={news.data.link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                  {lang === 'en' ? 'Read more' : '阅读更多'} →
+                </a>
+              )}
+            </article>
+          ))}
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+          <a href={`/${lang}/news/`} class="btn">{lang === 'en' ? 'View All News' : '查看所有动态'}</a>
+        </div>
+      </section>
+    )}
+
+    <section class="home-section">
+      <h2 class="section-title">{t('home.research.areas')}</h2>
+      <div class="grid">
+        {researchAreas.map((area) => (
+          <a href={`/${lang}/research/#${area.id}`} class="card research-card">
+            <h3>{area.title[lang]}</h3>
+            <p>{area.description[lang]}</p>
+            <span class="card-link">{lang === 'en' ? 'View Details →' : '查看详情 →'}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  
+  .home-section {
+    margin-bottom: 4rem;
+  }
+  
+  .card-journal {
+    font-style: italic;
+    color: var(--color-text-secondary);
+    margin-top: 0.5rem;
+  }
+  
+  .card-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .research-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .research-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px var(--color-shadow-hover);
+  }
+  
+  .research-card h3 {
+    color: var(--color-text);
+    transition: color 0.2s ease;
+  }
+  
+  .research-card:hover h3 {
+    color: var(--color-accent);
+  }
+  
+  .card-link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--color-accent);
+    font-weight: 500;
+    font-size: 0.9rem;
+    opacity: 1;
+    transition: color 0.2s ease;
+  }
+  
+  .research-card:hover .card-link {
+    color: var(--color-accent-hover);
+  }
+</style>
+

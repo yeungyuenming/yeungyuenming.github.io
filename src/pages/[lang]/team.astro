@@ -1,0 +1,169 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+let teamMembers: any[] = [];
+try {
+  teamMembers = await getCollection('team', ({ data }) => {
+    return data.lang === lang;
+  });
+  // Sort: PI first, then by type and name
+  teamMembers.sort((a, b) => {
+    if (a.data.type === 'pi') return -1;
+    if (b.data.type === 'pi') return 1;
+    if (a.data.type !== b.data.type) {
+      const order = ['researcher', 'student', 'collaborator', 'alumni'];
+      return order.indexOf(a.data.type || '') - order.indexOf(b.data.type || '');
+    }
+    return a.data.name.localeCompare(b.data.name);
+  });
+} catch (e) {
+  // Collection might not exist yet
+}
+
+const title = lang === 'en' ? 'Team - Research Lab' : '团队 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Team members and collaborators'
+  : '团队成员和合作者';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/team/`}>
+  <div class="container">
+    <h1 class="section-title">{t('team.title')}</h1>
+    
+    {teamMembers.length === 0 ? (
+      <div class="grid">
+        <article class="card team-card">
+          <div class="team-avatar">
+            <div class="avatar-placeholder">{lang === 'en' ? 'PI' : '负责人'}</div>
+          </div>
+          <h3>{lang === 'en' ? 'Principal Investigator' : '负责人'}</h3>
+          <p class="team-role">{lang === 'en' ? 'Your Name' : '你的名字'}</p>
+          <p>{lang === 'en' 
+            ? 'Brief bio and research interests...'
+            : '简要介绍和研究兴趣...'}
+          </p>
+        </article>
+      </div>
+    ) : (
+      <div class="team-grid">
+        {teamMembers.map((member) => (
+          <article class="card team-card">
+            {member.data.avatar ? (
+              <img src={member.data.avatar} alt={member.data.name} class="team-avatar-img" />
+            ) : (
+              <div class="team-avatar">
+                <div class="avatar-placeholder">{member.data.name.charAt(0)}</div>
+              </div>
+            )}
+            <h3>{member.data.name}</h3>
+            <p class="team-role">{member.data.role}</p>
+            {member.data.bio && <p class="team-bio">{member.data.bio}</p>}
+            <div class="team-links">
+              {member.data.email && (
+                <a href={`mailto:${member.data.email}`} aria-label="Email">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </a>
+              )}
+              {member.data.website && (
+                <a href={member.data.website} target="_blank" rel="noopener noreferrer" aria-label="Website">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+  
+  .team-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .team-avatar,
+  .team-avatar-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+    object-fit: cover;
+  }
+  
+  .team-avatar {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .avatar-placeholder {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+  }
+  
+  .team-role {
+    color: var(--color-accent);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .team-bio {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+  }
+  
+  .team-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+  
+  .team-links a {
+    color: var(--color-text-secondary);
+    transition: color 0.2s ease;
+  }
+  
+  .team-links a:hover {
+    color: var(--color-accent);
+  }
+  
+  @media (max-width: 768px) {
+    .team-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+

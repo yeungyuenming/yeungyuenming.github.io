@@ -1,0 +1,68 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+let teachingItems: any[] = [];
+try {
+  teachingItems = await getCollection('teaching', ({ data }) => {
+    return data.lang === lang;
+  });
+} catch (e) {
+  // Collection might not exist yet
+}
+
+const title = lang === 'en' ? 'Teaching - Research Lab' : '教学 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Teaching activities and courses'
+  : '教学活动和课程';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/teaching/`}>
+  <div class="container">
+    <h1 class="section-title">{t('teaching.title')}</h1>
+    
+    {teachingItems.length === 0 ? (
+      <div class="grid">
+        <article class="card">
+          <h3>{lang === 'en' ? 'Course Name' : '课程名称'}</h3>
+          <span class="card-date">{lang === 'en' ? 'Term/Year' : '学期/年份'}</span>
+          <p>{lang === 'en' 
+            ? 'Course description and learning objectives...'
+            : '课程描述和学习目标...'}
+          </p>
+          <a href="#" class="btn btn-secondary">{lang === 'en' ? 'Course Materials' : '课程材料'}</a>
+        </article>
+      </div>
+    ) : (
+      <div class="grid">
+        {teachingItems.map((item) => (
+          <article class="card">
+            <h3>{item.data.title}</h3>
+            {item.data.term && <span class="card-date">{item.data.term}</span>}
+            {item.data.description && <p>{item.data.description}</p>}
+            <div class="content">
+              <slot />
+            </div>
+            {item.data.link && (
+              <a href={item.data.link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                {lang === 'en' ? 'Course Materials' : '课程材料'}
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>
+

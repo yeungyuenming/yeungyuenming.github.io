@@ -1,0 +1,123 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+const title = lang === 'en' ? 'CV - Research Lab' : '简历 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Curriculum Vitae'
+  : '个人简历';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/cv/`}>
+  <div class="container">
+    <h1 class="section-title">{t('cv.title')}</h1>
+    
+    <div class="cv-content">
+      <section class="cv-section">
+        <h2>{t('cv.education')}</h2>
+        <div class="cv-item">
+          <h3>{lang === 'en' ? 'Ph.D. in [Field]' : '博士学位 - [专业]'}</h3>
+          <p class="cv-institution">{lang === 'en' ? 'University Name' : '大学名称'}</p>
+          <p class="cv-date">{lang === 'en' ? 'Year - Year' : '年份 - 年份'}</p>
+        </div>
+        <div class="cv-item">
+          <h3>{lang === 'en' ? 'M.S. in [Field]' : '硕士学位 - [专业]'}</h3>
+          <p class="cv-institution">{lang === 'en' ? 'University Name' : '大学名称'}</p>
+          <p class="cv-date">{lang === 'en' ? 'Year - Year' : '年份 - 年份'}</p>
+        </div>
+      </section>
+      
+      <section class="cv-section">
+        <h2>{t('cv.experience')}</h2>
+        <div class="cv-item">
+          <h3>{lang === 'en' ? 'Position Title' : '职位名称'}</h3>
+          <p class="cv-institution">{lang === 'en' ? 'Institution Name' : '机构名称'}</p>
+          <p class="cv-date">{lang === 'en' ? 'Year - Present' : '年份 - 至今'}</p>
+          <p>{lang === 'en' ? 'Description of your role and responsibilities...' : '你的角色和职责描述...'}</p>
+        </div>
+      </section>
+      
+      <section class="cv-section">
+        <h2>{t('cv.awards')}</h2>
+        <ul class="cv-list">
+          <li>{lang === 'en' ? 'Award Name, Year' : '奖项名称，年份'}</li>
+          <li>{lang === 'en' ? 'Award Name, Year' : '奖项名称，年份'}</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .cv-content {
+    max-width: 800px;
+  }
+  
+  .cv-section {
+    margin-bottom: 3rem;
+  }
+  
+  .cv-section h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-accent);
+    padding-bottom: 0.5rem;
+  }
+  
+  .cv-item {
+    margin-bottom: 2rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--color-border);
+  }
+  
+  .cv-item h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+  
+  .cv-institution {
+    font-weight: 500;
+    color: var(--color-accent);
+    margin-bottom: 0.25rem;
+  }
+  
+  .cv-date {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .cv-list {
+    list-style: none;
+    padding-left: 1rem;
+  }
+  
+  .cv-list li {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  
+  .cv-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: bold;
+  }
+</style>
+

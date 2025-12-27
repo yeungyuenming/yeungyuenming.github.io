@@ -1,0 +1,209 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+const title = lang === 'en' ? 'Search - Research Lab' : '搜索 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Search publications, news, and research'
+  : '搜索论文、动态和研究';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/search/`}>
+  <div class="container">
+    <h1 class="section-title">{t('search.title')}</h1>
+    
+    <div class="search-container">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder={t('search.placeholder')}
+        autocomplete="off"
+      />
+      <div id="search-results" class="search-results"></div>
+      <div id="search-status" class="search-status"></div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import Fuse from 'fuse.js';
+  
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const searchResults = document.getElementById('search-results');
+  const searchStatus = document.getElementById('search-status');
+  const lang = `{lang}`;
+  
+  let searchIndex: any[] = [];
+  let fuse: Fuse<any>;
+  
+  // Load search index
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(`/search-index.json`);
+      const data = await response.json();
+      searchIndex = data.filter((item: any) => item.lang === lang);
+      
+      fuse = new Fuse(searchIndex, {
+        keys: ['title', 'content', 'authors', 'description'],
+        threshold: 0.3,
+        includeScore: true,
+      });
+    } catch (error) {
+      console.error('Failed to load search index:', error);
+    }
+  }
+  
+  function renderResults(results: any[]) {
+    if (!searchResults) return;
+    
+    if (results.length === 0) {
+      searchResults.innerHTML = `<p class="no-results">${lang === 'en' ? 'No results found' : '未找到结果'}</p>`;
+      if (searchStatus) searchStatus.textContent = '';
+      return;
+    }
+    
+    if (searchStatus) {
+      searchStatus.textContent = `${results.length} ${lang === 'en' ? 'results found' : '个结果'}`;
+    }
+    
+    searchResults.innerHTML = results.map((result) => {
+      const item = result.item;
+      const score = result.score || 0;
+      const highlight = score < 0.3 ? 'highlight' : '';
+      
+      return `
+        <article class="card search-result ${highlight}">
+          <h3><a href="${item.url}">${item.title}</a></h3>
+          <span class="card-date">${item.date || ''}</span>
+          <p class="search-snippet">${item.snippet || item.content?.substring(0, 200) || ''}...</p>
+          <div class="search-meta">
+            <span class="search-type">${item.type}</span>
+            ${item.authors ? `<span class="search-authors">${item.authors}</span>` : ''}
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+  
+  function performSearch(query: string) {
+    if (!fuse || !query.trim()) {
+      if (searchResults) searchResults.innerHTML = '';
+      if (searchStatus) searchStatus.textContent = '';
+      return;
+    }
+    
+    const results = fuse.search(query);
+    renderResults(results);
+  }
+  
+  // Debounce search
+  let searchTimeout: number;
+  searchInput?.addEventListener('input', (e) => {
+    const query = (e.target as HTMLInputElement).value;
+    clearTimeout(searchTimeout);
+    searchTimeout = window.setTimeout(() => {
+      performSearch(query);
+    }, 300);
+  });
+  
+  // Load index on page load
+  loadSearchIndex();
+</script>
+
+<style>
+  .search-container {
+    max-width: 900px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.125rem;
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    margin-bottom: 2rem;
+    transition: border-color 0.2s ease;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  
+  .search-status {
+    margin-bottom: 1rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+  
+  .search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .search-result {
+    margin-bottom: 0;
+  }
+  
+  .search-result.highlight {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb, 0, 102, 204), 0.1);
+  }
+  
+  .search-result h3 a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  
+  .search-result h3 a:hover {
+    color: var(--color-accent);
+  }
+  
+  .search-snippet {
+    color: var(--color-text-secondary);
+    margin: 0.75rem 0;
+    line-height: 1.6;
+  }
+  
+  .search-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+  
+  .search-type {
+    padding: 0.25rem 0.75rem;
+    background-color: var(--color-bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    text-transform: capitalize;
+  }
+  
+  .search-authors {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+  
+  .no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-secondary);
+  }
+</style>
+

@@ -1,0 +1,293 @@
+---
+import { useTranslations, type Lang } from '@i18n/ui';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  lang: Lang;
+  currentPath: string;
+}
+
+const { lang, currentPath } = Astro.props;
+const t = useTranslations(lang);
+
+const navItems = [
+  { key: 'nav.home', path: `/${lang}/` },
+  { key: 'nav.research', path: `/${lang}/research/` },
+  { key: 'nav.publications', path: `/${lang}/publications/` },
+  { key: 'nav.news', path: `/${lang}/news/` },
+  { key: 'nav.cv', path: `/${lang}/cv/` },
+  { key: 'nav.teaching', path: `/${lang}/teaching/` },
+  { key: 'nav.team', path: `/${lang}/team/` },
+  { key: 'nav.photos', path: `/${lang}/photos/` },
+  { key: 'nav.contact', path: `/${lang}/contact/` },
+];
+---
+
+<header>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href={`/${lang}/`} class="logo">
+        <div class="logo-images">
+          <img src="/logos/animation.gif" alt="Animation" class="logo-img logo-animation" />
+          <img src="/logos/logo2.png" alt="The First Affiliated Hospital of Guangzhou University of Chinese Medicine" class="logo-img" />
+        </div>
+        <span class="logo-text">Research Lab</span>
+      </a>
+      
+      <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+      
+      <ul class="nav-links" id="nav-links">
+        {navItems.map((item) => (
+          <li>
+            <a
+              href={item.path}
+              class={currentPath === item.path ? 'active' : ''}
+            >
+              {t(item.key as any)}
+            </a>
+          </li>
+        ))}
+        <li class="nav-actions">
+          <a href={`/${lang}/search/`} class="search-link" aria-label={t('nav.search')}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </a>
+          <div class="lang-switcher">
+            <a href={currentPath.replace(`/${lang}/`, '/en/')} class={lang === 'en' ? 'active' : ''}>EN</a>
+            <span class="lang-separator">|</span>
+            <a href={currentPath.replace(`/${lang}/`, '/zh/')} class={lang === 'zh' ? 'active' : ''}>ZH</a>
+          </div>
+          <ThemeToggle lang={lang} />
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<script>
+  const menuToggle = document.getElementById('menu-toggle');
+  const navLinks = document.getElementById('nav-links');
+  
+  menuToggle?.addEventListener('click', () => {
+    navLinks?.classList.toggle('active');
+    menuToggle?.classList.toggle('active');
+  });
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.navbar') && navLinks?.classList.contains('active')) {
+      navLinks.classList.remove('active');
+      menuToggle?.classList.remove('active');
+    }
+  });
+</script>
+
+<style>
+  .navbar {
+    background-color: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    background-color: rgba(var(--color-bg-rgb, 255, 255, 255), 0.9);
+  }
+  
+  [data-theme="dark"] .navbar {
+    background-color: rgba(var(--color-bg-rgb, 26, 26, 26), 0.9);
+  }
+  
+  .navbar-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+  }
+  
+  .logo:hover .logo-text {
+    opacity: 1;
+  }
+  
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+  
+  [data-theme="dark"] .logo-text {
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  [data-theme="light"] .logo-text {
+    color: #1a1a1a;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
+  }
+  
+  /* 确保在auto模式下也能清晰显示 */
+  @media (prefers-color-scheme: dark) {
+    .logo-text {
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+  
+  .logo-images {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .logo-img {
+    height: 2rem;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+  
+  .logo-animation {
+    height: 3rem;
+  }
+  
+  .logo:hover .logo-img {
+    opacity: 1;
+  }
+  
+  .nav-links {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    margin-left: 2rem;
+    flex: 1 1 auto;
+  }
+  
+  .nav-links li a {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    transition: color 0.2s ease;
+    text-decoration: none;
+  }
+  
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    color: var(--color-accent);
+  }
+  
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+    padding-left: 1rem;
+    border-left: 1px solid var(--color-border);
+  }
+  
+  .search-link {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-secondary);
+  }
+  
+  .search-link:hover {
+    color: var(--color-accent);
+  }
+  
+  .lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .lang-switcher a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+  
+  .lang-switcher a.active {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  
+  .lang-separator {
+    color: var(--color-text-secondary);
+  }
+  
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    gap: 4px;
+  }
+  
+  .menu-toggle .bar {
+    width: 25px;
+    height: 3px;
+    background-color: var(--color-text);
+    transition: all 0.3s ease;
+    border-radius: 2px;
+  }
+  
+  @media (max-width: 768px) {
+    .menu-toggle {
+      display: flex;
+    }
+    
+    .nav-links {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      background-color: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 1rem;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: 0 4px 6px var(--color-shadow);
+      margin-left: 0;
+    }
+    
+    .nav-links.active {
+      transform: translateX(0);
+    }
+    
+    .nav-actions {
+      border-left: none;
+      border-top: 1px solid var(--color-border);
+      padding-top: 1rem;
+      margin-top: 1rem;
+      margin-left: 0;
+      padding-left: 0;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+

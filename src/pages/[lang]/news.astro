@@ -1,0 +1,157 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+let allNews: any[] = [];
+try {
+  allNews = await getCollection('news', ({ data }) => {
+    return data.lang === lang;
+  });
+  allNews.sort((a, b) => {
+    const dateA = new Date(a.data.date).getTime();
+    const dateB = new Date(b.data.date).getTime();
+    return dateB - dateA;
+  });
+} catch (e) {
+  // Collection might not exist yet
+}
+
+const years = Array.from(new Set(allNews.map(n => new Date(n.data.date).getFullYear()))).sort((a, b) => b - a);
+
+const title = lang === 'en' ? 'News - Research Lab' : '动态 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Latest news and updates'
+  : '最新动态和更新';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/news/`}>
+  <div class="container">
+    <h1 class="section-title">{t('news.title')}</h1>
+    
+    {allNews.length === 0 ? (
+      <p>{lang === 'en' ? 'No news yet.' : '暂无动态。'}</p>
+    ) : (
+      <>
+        {years.length > 0 && (
+          <div class="filters">
+            <div class="filter-group">
+              <label>{t('news.filter.year')}:</label>
+              <select id="year-filter" class="filter-select">
+                <option value="all">{t('news.filter.all')}</option>
+                {years.map(year => (
+                  <option value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+        
+        <div id="news-list" class="news-list">
+          {allNews.map((news) => {
+            const year = new Date(news.data.date).getFullYear();
+            return (
+              <article class="card news-card" data-year={year}>
+                <h3>{news.data.title}</h3>
+                <span class="card-date">
+                  {new Date(news.data.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                <div class="news-content">
+                  <slot name="content" />
+                </div>
+                {news.data.link && (
+                  <a href={news.data.link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                    {lang === 'en' ? 'Read more' : '阅读更多'} →
+                  </a>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  const yearFilter = document.getElementById('year-filter');
+  const newsList = document.getElementById('news-list');
+  
+  function filterNews() {
+    const selectedYear = yearFilter?.value || 'all';
+    const cards = newsList?.querySelectorAll('.news-card') || [];
+    
+    cards.forEach((card: HTMLElement) => {
+      const cardYear = card.dataset.year;
+      const yearMatch = selectedYear === 'all' || cardYear === selectedYear;
+      
+      if (yearMatch) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+  
+  yearFilter?.addEventListener('change', filterNews);
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .filter-group label {
+    font-weight: 500;
+    color: var(--color-text);
+  }
+  
+  .filter-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  .news-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .news-card {
+    margin-bottom: 0;
+  }
+  
+  .news-content {
+    margin: 1rem 0;
+  }
+</style>
+

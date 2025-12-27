@@ -1,0 +1,200 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { useTranslations, type Lang } from '@i18n/ui';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+let allPublications: any[] = [];
+try {
+  allPublications = await getCollection('publications', ({ data }) => {
+    return data.lang === lang;
+  });
+  allPublications.sort((a, b) => {
+    const dateA = new Date(a.data.date).getTime();
+    const dateB = new Date(b.data.date).getTime();
+    return dateB - dateA;
+  });
+} catch (e) {
+  // Collection might not exist yet
+}
+
+// Extract unique years and types for filtering
+const years = Array.from(new Set(allPublications.map(p => new Date(p.data.date).getFullYear()))).sort((a, b) => b - a);
+const types = Array.from(new Set(allPublications.map(p => p.data.type).filter(Boolean)));
+
+const title = lang === 'en' ? 'Publications - Research Lab' : '论文发表 - 研究实验室';
+const description = lang === 'en' 
+  ? 'Research publications and papers'
+  : '研究论文和出版物';
+---
+
+<BaseLayout lang={lang} title={title} description={description} currentPath={`/${lang}/publications/`}>
+  <div class="container">
+    <h1 class="section-title">{t('publications.title')}</h1>
+    
+    {allPublications.length === 0 ? (
+      <p>{lang === 'en' ? 'No publications yet.' : '暂无论文发表。'}</p>
+    ) : (
+      <>
+        <div class="filters">
+          {years.length > 0 && (
+            <div class="filter-group">
+              <label>{t('publications.filter.year')}:</label>
+              <select id="year-filter" class="filter-select">
+                <option value="all">{t('publications.filter.all')}</option>
+                {years.map(year => (
+                  <option value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {types.length > 0 && (
+            <div class="filter-group">
+              <label>{t('publications.filter.type')}:</label>
+              <select id="type-filter" class="filter-select">
+                <option value="all">{t('publications.filter.all')}</option>
+                {types.map(type => (
+                  <option value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        
+        <div id="publications-list" class="publications-list">
+          {allPublications.map((pub) => {
+            const year = new Date(pub.data.date).getFullYear();
+            return (
+              <article class="card publication-card" data-year={year} data-type={pub.data.type || 'all'}>
+                <h3>{pub.data.title}</h3>
+                <div class="publication-meta">
+                  <span class="card-date">{year}</span>
+                  {pub.data.type && <span class="publication-type">{pub.data.type}</span>}
+                </div>
+                <p class="publication-authors">{pub.data.authors}</p>
+                {pub.data.journal && <p class="card-journal">{pub.data.journal}</p>}
+                <div class="card-actions">
+                  {pub.data.link && (
+                    <a href={pub.data.link} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                      {t('publications.link')}
+                    </a>
+                  )}
+                  {pub.data.pdf && (
+                    <a href={pub.data.pdf} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                      {t('publications.pdf')}
+                    </a>
+                  )}
+                  {pub.data.code && (
+                    <a href={pub.data.code} target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                      Code
+                    </a>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  const yearFilter = document.getElementById('year-filter');
+  const typeFilter = document.getElementById('type-filter');
+  const publicationsList = document.getElementById('publications-list');
+  
+  function filterPublications() {
+    const selectedYear = yearFilter?.value || 'all';
+    const selectedType = typeFilter?.value || 'all';
+    const cards = publicationsList?.querySelectorAll('.publication-card') || [];
+    
+    cards.forEach((card: HTMLElement) => {
+      const cardYear = card.dataset.year;
+      const cardType = card.dataset.type || 'all';
+      
+      const yearMatch = selectedYear === 'all' || cardYear === selectedYear;
+      const typeMatch = selectedType === 'all' || cardType === selectedType;
+      
+      if (yearMatch && typeMatch) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+  
+  yearFilter?.addEventListener('change', filterPublications);
+  typeFilter?.addEventListener('change', filterPublications);
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .filter-group label {
+    font-weight: 500;
+    color: var(--color-text);
+  }
+  
+  .filter-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  .publications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .publication-card {
+    margin-bottom: 0;
+  }
+  
+  .publication-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .publication-type {
+    padding: 0.25rem 0.75rem;
+    background-color: var(--color-bg-secondary);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    text-transform: capitalize;
+  }
+  
+  .publication-authors {
+    margin: 0.5rem 0;
+    color: var(--color-text-secondary);
+  }
+</style>
+

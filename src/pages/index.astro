@@ -1,0 +1,24 @@
+---
+// Redirect to default language
+import { languages, defaultLang } from '@i18n/ui';
+
+export async function getStaticPaths() {
+  return languages.map((lang) => ({
+    params: { lang },
+    props: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<script>
+  // Detect user's preferred language
+  const userLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+  const savedLang = localStorage.getItem('preferred-lang');
+  const targetLang = savedLang || userLang || '{defaultLang}';
+  
+  // Redirect to language-specific home page
+  window.location.replace(`/${targetLang}/`);
+</script>
+
